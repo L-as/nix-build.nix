@@ -17,7 +17,12 @@ let
       coreutils = (import ${pkgs.path} {}).coreutils;
     }
   '';
+  NIX_CONFIG = ''
+    extra-system-features = recursive-nix
+    experimental-features = nix-command flakes recursive-nix ca-references ca-derivations
+  '';
   script = ''
+    set -xe
     export PATH="${pkgs.coreutils}/bin:${nix92}/bin:$PATH"
     cp "$(nix-instantiate "$input" --no-allow-import-from-derivation)" $out
   '';
@@ -34,6 +39,7 @@ let
           __contentAddressed = true;
           outputHashMode = "text";
           outputHashAlgo = "sha256";
+          inherit NIX_CONFIG;
         };
       in
       builtins.outputOf drv.out "out";

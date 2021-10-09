@@ -2,6 +2,8 @@
 
 let
   script = ''
+    set -xe
+
     export PATH="${pkgs.coreutils}/bin:${pkgs.nixUnstable}/bin:$PATH"
 
     nix \
