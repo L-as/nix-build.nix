@@ -3,15 +3,16 @@
 let
   innerWrapper = name: path: pkgs.writeText (name + "-nix-build-wrapper.nix") ''
     let
-      drv = import ${path};
+      drv = import (builtins.storePath ${path});
       innerScript = '''
         "$coreutils/bin/ln" -s ''${drv.out} $out
       ''';
+      bash = builtins.storePath ${pkgs.bash};
     in
     derivation {
       name = "${name}";
       system = "${pkgs.system}";
-      builder = "${pkgs.bash}/bin/sh";
+      builder = "''${bash}/bin/sh";
       args = [ "-c" innerScript ];
       coreutils = (import ${pkgs.path} {}).coreutils;
     }
