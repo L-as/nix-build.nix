@@ -10,45 +10,43 @@
     supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
 
     forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-
-    ourNix = system: nix.packages.${system}.nix.overrideAttrs (_: {
-      doCheck = false;
-      doInstallCheck = false;
-    });
   in
   {
-    nixBuild' = ifd: system: path:
-      let
-        pkgs = import nixpkgs { inherit system; };
-        nix = ourNix system;
-      in
-      (import ./nix-build.nix { inherit pkgs nix ifd; }).nixBuild path;
-    nixBuild = self.nixBuild' false;
-    nixBuildIFD = self.nixBuild' true;
+    nixBuild = system: import ./nix-build.nix {
+      pkgs = import nixpkgs { inherit system; };
+      inherit (self.packages.${system}) nix92;
+    };
+    nixBuildRec = system: import ./nix-build-recursive.nix {
+      pkgs = import nixpkgs { inherit system; };
+    };
+    nixBuildIFD = _system: _name: path: (import path).out;
+
 
     packages = forAllSystems (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        nix = ourNix system;
-      in
-      rec {
         hello-nix = pkgs.writeText "hello.nix" ''
           with import (${nixpkgs}) {}; hello
         '';
-        hello = self.nixBuild system "${hello-nix}";
-        helloIFD = self.nixBuildIFD system "${hello-nix}";
+      in
+      {
+        hello = self.nixBuild system "hello-92" hello-nix;
+        helloRec = self.nixBuildRec system "hello-rec" hello-nix;
+        helloIFD = self.nixBuildIFD system "hello-ifd" hello-nix;
+        nix92 = nix.packages.${system}.nix.overrideAttrs (_: {
+          doCheck = false;
+          doInstallCheck = false;
+        });
       }
     );
 
-    /* FIXME: doesn't work
     checks = forAllSystems (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        nix = ourNix system;
       in
       {
         hello = pkgs.runCommand "hello-rfc92" {
-          nativeBuildInputs = [ nix pkgs.curl ];
+          nativeBuildInputs = [ self.packages.${system}.nix92 pkgs.curl ];
           outputHash = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
           outputHashMode = "recursive";
           outputHashAlgo = "sha256";
@@ -58,12 +56,15 @@
           mkdir myhome
           export HOME="$(realpath ./myhome)"
           mkdir mystore
-          nix --store "$(realpath ./mystore)" --extra-system-features recursive-nix --experimental-features "nix-command flakes recursive-nix ca-references ca-derivations" build path:${self}#hello -L --log-format bar-with-logs
+          nix \
+            --store "$(realpath ./mystore)" \
+            --extra-system-features recursive-nix \
+            --experimental-features "nix-command flakes recursive-nix ca-references ca-derivations" \
+            build path:${self}#hello -L --log-format bar-with-logs
           mkdir $out
         '';
       }
     );
-    */
   };
  
 }

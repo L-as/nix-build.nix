@@ -1,36 +1,34 @@
-{ pkgs, nix, ifd }:
+{ pkgs, nix92 }:
 
 let
-  wrapNix = path: pkgs.writeText "wrapNix.nix" ''
+  innerWrapper = name: path: pkgs.writeText (name + "-nix-build-wrapper.nix") ''
     let
       drv = import ${path};
-      wrapNixScript = '''
+      innerScript = '''
         "$coreutils/bin/ln" -s ''${drv.out} $out
       ''';
     in
     derivation {
-      name = "nix-build";
-      system = "x86_64-linux";
-      builder = "/bin/sh";
-      args = [ "-c" wrapNixScript ];
+      name = "${name}";
+      system = "${pkgs.system}";
+      builder = "${pkgs.bash}/bin/sh";
+      args = [ "-c" innerScript ];
       coreutils = (import ${pkgs.path} {}).coreutils;
     }
   '';
   script = ''
-    export PATH="${pkgs.coreutils}/bin:${nix}/bin:$PATH"
-    cp "$(nix-instantiate "$input")" $out
+    export PATH="${pkgs.coreutils}/bin:${nix92}/bin:$PATH"
+    cp "$(nix-instantiate "$input" --no-allow-import-from-derivation)" $out
   '';
   nixBuildUnwrapped =
-    if ifd
-    then path: (import (wrapNix path)).out
-    else path:
+    name: path:
       let
-        drv = derivation {
-          name = "nix-build.drv";
+        drv = builtins.derivation {
+          name = name + ".drv";
           inherit (pkgs) system;
-          builder = "/bin/sh";
+          builder = "${pkgs.bash}/bin/sh";
           requiredSystemFeatures = [ "recursive-nix" ];
-          input = "${wrapNix path}";
+          input = innerWrapper name path;
           args = [ "-c" script ];
           __contentAddressed = true;
           outputHashMode = "text";
@@ -38,11 +36,8 @@ let
         };
       in
       builtins.outputOf drv.out "out";
-  wrapper = path: pkgs.runCommand "nix-build-wrapper" {} ''
+  wrapper = name: path: pkgs.runCommand (name + "-nix-build-wrapped") {} ''
     ln -s ${path} $out
   '';
-  nixBuild = path: wrapper (nixBuildUnwrapped path);
 in
-{
-  inherit nixBuild;
-}
+name: path: wrapper name (nixBuildUnwrapped name path)
