@@ -1,7 +1,7 @@
 {
   description = "nix build inside nix build using RFC 92";
 
-  inputs.nix.url = "github:NixOS/nix?rev=e85248ae59a26e98578a03be80799aa126663998";
+  inputs.nix.url = "github:obsidiansystems/nix?ref=refs/heads/dynamic-drvs";
 
   outputs = { self, nix }:
   let

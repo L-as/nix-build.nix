@@ -3,11 +3,11 @@
     "lowdown-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1632468475,
-        "narHash": "sha256-NNOm9CbdA8cuwbvaBHslGbPTiU6bh1Ao+MpEPx4rSGo=",
+        "lastModified": 1633514407,
+        "narHash": "sha256-Dw32tiMjdK9t3ETl5fzGrutQTzh2rufgZV4A/BbxuD4=",
         "owner": "kristapsdz",
         "repo": "lowdown",
-        "rev": "6bd668af3fd098bdd07a1bedd399564141e275da",
+        "rev": "d2c2b44ff6c27b936ec27358a2653caaef8f73b8",
         "type": "github"
       },
       "original": {
@@ -22,17 +22,17 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1633111613,
-        "narHash": "sha256-TPeK10seT8E1pJnf04a3AfffCXfKNmQOhLWI+whsY5s=",
-        "owner": "NixOS",
+        "lastModified": 1633743648,
+        "narHash": "sha256-Tqb3t2JJlRvIgvc9aMQdV9urT8gFIRIOrh0f8Fl+Htg=",
+        "owner": "obsidiansystems",
         "repo": "nix",
-        "rev": "e85248ae59a26e98578a03be80799aa126663998",
+        "rev": "965ad81b052fafe217c289cdccc18f95e6e45188",
         "type": "github"
       },
       "original": {
-        "owner": "NixOS",
+        "owner": "obsidiansystems",
+        "ref": "refs/heads/dynamic-drvs",
         "repo": "nix",
-        "rev": "e85248ae59a26e98578a03be80799aa126663998",
         "type": "github"
       }
     },
