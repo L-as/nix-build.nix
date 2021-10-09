@@ -30,7 +30,7 @@
         '';
       in
       {
-        hello = self.nixBuild system "hello-92" hello-nix;
+        hello = self.nixBuild system "hello-rfc92" hello-nix;
         helloRec = self.nixBuildRec system "hello-rec" hello-nix;
         helloIFD = self.nixBuildIFD system "hello-ifd" hello-nix;
         nix92 = nix.packages.${system}.nix.overrideAttrs (_: {
@@ -45,8 +45,46 @@
         pkgs = import nixpkgs { inherit system; };
       in
       {
-        hello = pkgs.runCommand "hello-rfc92" {
+        helloRec = pkgs.runCommand "hello-rec-check" {
           nativeBuildInputs = [ self.packages.${system}.nix92 pkgs.curl ];
+          outputHash = "Db2F9nSNXWKOGZKs8HLqZEAKLDtMK3IW5CxNffiKcG0=";
+          outputHashMode = "recursive";
+          outputHashAlgo = "sha256";
+          SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          NIX_SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+        } ''
+          mkdir myhome
+          export HOME="$(realpath ./myhome)"
+          mkdir mystore
+          nix \
+            --store "$(realpath ./mystore)" \
+            --extra-system-features recursive-nix \
+            --experimental-features "nix-command flakes recursive-nix ca-references ca-derivations" \
+            build path:${self}#helloRec --print-build-logs --log-format bar-with-logs
+          readlink ./result | tail -c +10 > $out
+        '';
+        hello = pkgs.runCommand "hello-check" {
+          nativeBuildInputs = [ self.packages.${system}.nix92 pkgs.curl ];
+          outputHash = "mO/xrv5A0jYB9uJawkTXpNZIrgyAtqG+pUCkv0wnhkA=";
+          outputHashMode = "recursive";
+          outputHashAlgo = "sha256";
+          SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          NIX_SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+        } ''
+          mkdir myhome
+          export HOME="$(realpath ./myhome)"
+          mkdir mystore
+          nix \
+            --store "$(realpath ./mystore)" \
+            --extra-system-features recursive-nix \
+            --experimental-features "nix-command flakes recursive-nix ca-references ca-derivations" \
+            build path:${self}#hello --print-build-logs --log-format bar-with-logs
+          readlink ./result | tail -c +10 > $out
+        '';
+        # FIXME: fails
+        /*
+        helloIFD = pkgs.runCommand "hello-ifd-check" {
+          nativeBuildInputs = [ pkgs.nixUnstable pkgs.curl ];
           outputHash = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
           outputHashMode = "recursive";
           outputHashAlgo = "sha256";
@@ -60,9 +98,10 @@
             --store "$(realpath ./mystore)" \
             --extra-system-features recursive-nix \
             --experimental-features "nix-command flakes recursive-nix ca-references ca-derivations" \
-            build path:${self}#hello -L --log-format bar-with-logs
-          mkdir $out
+            build path:${self}#helloIFD --impure --print-build-logs --log-format bar-with-logs
+          readlink ./result | tail -c +10 > $out
         '';
+        */
       }
     );
   };
