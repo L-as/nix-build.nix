@@ -33,6 +33,8 @@
         hello = self.nixBuild system "hello-rfc92" hello-nix;
         helloRec = self.nixBuildRec system "hello-rec" hello-nix;
         helloIFD = self.nixBuildIFD system "hello-ifd" hello-nix;
+        helloManual = import ./manual.nix { inherit pkgs; };
+        helloNixpkgs = pkgs.hello;
         nix92 = nix.packages.${system}.nix.overrideAttrs (_: {
           doCheck = false;
           doInstallCheck = false;
